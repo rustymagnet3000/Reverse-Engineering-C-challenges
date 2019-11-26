@@ -24,13 +24,14 @@ You need to remove a mountain of default compiler flags, if you compile vulnerab
 When using C APIs on macOS, it is useful to get familiar with `Lazy loading`, `stub_helpers` and the `dynamic linker`.  The following articles cover all of these topics:
 ```
 https://adrummond.net/posts/macho
+
 https://www.reinterpretcast.com/hello-world-mach-o
 ```
 Here are some direct quotes:
 - By default, dynamically bound symbols like printf are bound *lazily*. That is, printf is not bound when the executable is loaded, but only when the first call to printf is made.
 - The stub helper calls the dynamic linker. The dynamic linker overwrites the lazy symbol pointer with the address of the printf function itself. All arguments to dyld_stub_binder are passed on the stack, so the arguments to printf aren't clobbered.
 
-### Help
+### Clang Help
 You will need help to understand the Compiler flags and the C APIs.  macOS ships with `Clang`:
 ```
 clang -help | grep -i ffree
@@ -39,7 +40,7 @@ and you can also use..
 ```
 man strcpy
 ```
-These are the flags I used:
+### Compiler Security flags
 ```
 -ffreestanding          
 Assert that the compilation takes place in a freestanding environment
@@ -47,30 +48,56 @@ Assert that the compilation takes place in a freestanding environment
 -fno-stack-check
 Disable stack checking
 
+-fno-sanitize=address
+Turns off AddressSanitizer; used to detect memory corruption bugs such as buffer overflows or a dangling pointer (use-after-free)
+
 -fno-builtin
 Disable implicit builtin knowledge of functions
 
 -fno-stack-protector
-Disable the use of stack protectors
+Disable the use of Stack Canaries
 
 -fno-PIE
-Only required to better show the power of the exploit
+Turn off ASLR
 
 -fno-fsanitize=cfi
 
 -fno-delete-null-pointer-checks
-Do not treat usage of null pointers as undefined behavior.
+Do not treat usage of null pointers as undefined behavior
 
 -fno-autolink
 Disable generation of linker directives for automatic library linking
 
+-fno-sanitize=address
+Turn on runtime checks for various forms of undefined or suspicious behavior
+
 -g
-For Debug symbols, to make examples simpler to understand
+For Debug symbols, to simplify debugging
+```
+### Insecurely Compile
+```
+clang -fno-sanitize=address -ffreestanding -fno-stack-check -fno-builtin -fno-stack-protector -D_FORTIFY_SOURCE=0 -fno-PIE code.c -o tryme
+```
+### Compile and Run
+```
+// Example: https://wiki2.org/en/AddressSanitizer
+
+int global_array[100] = {-1};
+int main(int argc, char **argv) {
+  return global_array[argc + 100];  // Overflow by the number of arguments passed into the app
+}
+
+// Detects Overflow
+clang -O -g -fsanitize=address vuln.c && ./a.out
+
+// Does not detect Overflow
+clang -O -g -fno-sanitize=address vuln.c && ./a.out
 ```
 
 ### References
 ```
 https://security.web.cern.ch/security/recommendations/en/codetools/c.shtml
-
+https://wiki2.org/en/Buffer_overflow_protection#Clang/LLVM
 https://cwe.mitre.org/data/definitions/120.html
+
 ```
