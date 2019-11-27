@@ -1,7 +1,10 @@
 # Custom ignores
 a.out
 tryme
+notes.txt
 DRAFT*
+*.deb
+*.iso
 .DS_Store
 
 # Prerequisites
