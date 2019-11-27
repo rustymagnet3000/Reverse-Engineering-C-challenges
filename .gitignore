@@ -1,3 +1,7 @@
+# Custom ignores
+a.out
+tryme
+DRAFT*
 .DS_Store
 
 # Prerequisites
