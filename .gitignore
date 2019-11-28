@@ -1,7 +1,7 @@
 # Custom ignores
 a.out
 tryme
-notes.txt
+notes*
 DRAFT*
 *.deb
 *.iso

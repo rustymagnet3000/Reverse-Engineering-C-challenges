@@ -1,8 +1,8 @@
 # Explore vulnerable C APIs
 ## Overview
-The Internet is full of excellent ( and poor ) references to vulnerabilities in C and C++.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).
+The Internet is full of excellent [ and poor ] references to vulnerabilities in C and C++.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).
 
-Most of the APIs are relatively well-known:
+Most of the APIs were relatively well known:
 
 - gets
 - strcpy
