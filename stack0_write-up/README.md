@@ -270,15 +270,15 @@ int main(int argc, char **argv)
 
 ```
 ## Summary
-Although I wanted to use `gets` and a `[ Stack ] Buffer Overflow`, you could patch out the "test' instruction with a static disassembler or at run-time with a debugger.
+Although I wanted to use `gets` and a `[ Stack ] Buffer Overflow`, you could patch out the `test` instruction with a static disassembler or at run-time with a debugger.
 
 ##### Learnings
  - [x] Compiler optimisation -> the compiler replaced `printf` with `puts`
  - [x] c `volatile` keyword -> tells the Compiler not to Optimise away the variable
- - [x] X86 -> `test` instruction performs a bitwise AND on two operands.
- - [x] X86 -> `leave` is the opposite of setting up the stack. It is an alias for POP.
+ - [x] X86 -> `test` instruction performs a `bitwise AND` on two operands.
+ - [x] X86 -> `leave` is the opposite of setting up the stack. It is an alias for `Set ESP to EBP`, then `pop EBP`.
 
-##### Appendix - Convert Hex to Decimal
+##### Appendix - Bash convert Hex to Decimal
 ```
 $ printf "%02X\n" 65
 41
