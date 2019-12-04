@@ -1,8 +1,11 @@
 # Explore vulnerable C APIs
 ## Overview
-The Internet is full of excellent [ and poor ] references to vulnerabilities in C and C++.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).
+This repo includes the notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  
 
-Most of the APIs were relatively well known:
+I started the repo to remind myself of [ obscure ] commands while also teaching people who were learning to use a `debugger` or a  `disassembler`.
+
+### Reverse Engineering C challenges
+The Internet is full of excellent references to vulnerabilities in C.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).  Most of the APIs were relatively well known:
 
 - gets
 - strcpy
@@ -11,7 +14,6 @@ Most of the APIs were relatively well known:
 - scanf
 - access
 
-### Reverse Engineering C challenges
 You can use these insecure APIs to complete online `Memory Corruption` challenges.  Most offer a Virtual Machine so you play without worry.
 ```
 https://exploit.education/
@@ -22,11 +24,12 @@ https://azeria-labs.com/part-3-stack-overflow-challenges/
 https://samsclass.info/
 ```
 ### Getting Started
-There are some excellent references to getting a Virtual Machine setup.
+There are some good references to getting a Virtual Machine setup.
 ```
 http://www.iet.unipi.it/p.perazzo/teaching/cybsec/LAB.01.Phoenix_setup.pdf
 https://null-byte.wonderhowto.com/how-to/exploit-development-learn-binary-exploitation-with-protostar-0181154/
 ```
+
 ### References
 ```
 https://security.web.cern.ch/security/recommendations/en/codetools/c.shtml
