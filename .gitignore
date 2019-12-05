@@ -1,8 +1,6 @@
 # Custom ignores
-a.out
-tryme
+binaries
 notes*
-DRAFT*
 *.deb
 *.iso
 .DS_Store

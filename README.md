@@ -27,7 +27,7 @@ https://samsclass.info/
 There are some good references to getting a Virtual Machine setup.
 ```
 http://www.iet.unipi.it/p.perazzo/teaching/cybsec/LAB.01.Phoenix_setup.pdf
-https://null-byte.wonderhowto.com/how-to/exploit-development-learn-binary-exploitation-with-protostar-0181154/
+https://blog.lamarranet.com/index.php/exploit-education-phoenix-setup/
 ```
 
 ### References
