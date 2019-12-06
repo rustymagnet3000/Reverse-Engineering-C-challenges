@@ -1,4 +1,5 @@
 # Custom ignores
+gdb*
 binaries
 notes*
 *.deb

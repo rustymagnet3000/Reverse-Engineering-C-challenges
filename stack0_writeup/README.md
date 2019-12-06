@@ -39,7 +39,6 @@ stripped false
 #####  gets
 `man gets` tells you:
 
-
 > The gets() function cannot be used securely.  Because
 >      of its lack of bounds checking, and the inability for
 >      the calling program to reliably determine the length

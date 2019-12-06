@@ -1,21 +1,33 @@
 ## Setup
 - [x] Get VirtualBox: https://www.virtualbox.org/wiki/Downloads
 - [x] Get Ubuntu image: https://ubuntu.com/download/
-- [x] Set `Network` in the Ubuntu profile to `Bridged`
+- [x] Specify `minimal` Ubuntu installation
+- [x] Set `Network` in the Ubuntu profile to `Bridged` (so you will ssh using the `IP address`)
+
+### VM Hard Disk size
+- [x] Set allocated hard disk size to 12-15GB. It defaulted to 10GB, and I ran out of space
+- [x] I moved to a `Fixed size` Hard Disk, over `Dynamically Allocated` as it was quicker
+- [x] If you make an error, you can resize your `VBoxManage modifyhd /phoenixUbuntu.vdi --resize 15000`
+- [x] After changing disk disk size, you need to reallocate space by loading the Guest and using `gparted`
 
 ### Ubuntu Guest
+- [x] Check O/S version: `lsb_release -a`
 - [x] Get IP address: `ip a`
 - [x] Check SSH turned on: `sudo systemctl status ssh`
 - [x] Install SSH: `sudo apt install openssh-server`
 - [x] Unblock firewall: `sudo ufw allow ssh`
 - [x] Get ARM emulator `apt-get install qemu`
-- [x] Download the QCOW2 image: https://exploit.education/downloads
+- [x] Download the QCOW2 image: https://exploit.education/downloads ``(AMD64 (also i486))``
 
 ### Host
 ```
 ssh user@192.168.0.78
 $ cd exploit-education-phoenix-arm64/
 $ ./boot-exploit-education-arm64.sh
+
+// Prep for GDB.  Phoenix is set to use gef instead of vanilla gdb. Use this command to silence ASCII related errors.
+
+sudo sed -i 's/\\u27a4 />/g' /etc/gdb/gef.py
 ```
 ### Run ARM binary
 ```
@@ -61,8 +73,9 @@ sudo lsof -iTCP -sTCP:LISTEN -n -P    // Check the `Port Forwarding` is setup co
 ```
 ### References
 ```
+http://www.iet.unipi.it/p.perazzo/teaching/cybsec/LAB.01.Phoenix_setup.pdf
 https://blog.lamarranet.com/index.php/exploit-education-phoenix-setup/
 https://stackabuse.com/how-to-fix-warning-remote-host-identification-has-changed-on-mac-and-linux/
 https://en.wikibooks.org/wiki/X86_Assembly/X86_Architecture
-https://download.virtualbox.org/virtualbox/
+https://www.tecmint.com/parted-command-to-create-resize-rescue-linux-disk-partitions/
 ```
