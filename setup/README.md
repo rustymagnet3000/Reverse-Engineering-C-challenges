@@ -8,7 +8,7 @@
 - [x] Set allocated hard disk size to 12-15GB. It defaulted to 10GB, and I ran out of space
 - [x] I moved to a `Fixed size` Hard Disk, over `Dynamically Allocated` as it was quicker
 - [x] If you make an error, you can resize your `VBoxManage modifyhd /phoenixUbuntu.vdi --resize 15000`
-- [x] After changing disk disk size, you need to reallocate space by loading the Guest and using `gparted`.
+- [x] After changing disk disk size, you need to reallocate space by loading the Guest and using `gparted`
 
 ### VM Ubuntu check space
 ```
@@ -31,13 +31,10 @@ That freed up unused packages in: `/var/cache/apt/archives`. It gave me enough s
 - [x] Install SSH: `sudo apt install openssh-server`
 - [x] Unblock firewall: `sudo ufw allow ssh`
 - [x] Get ARM emulator `apt-get install qemu`
-- [x] Download the QCOW2 image: https://exploit.education/downloads ``(AMD64 (also i486))``
-
+- [x] Download the QCOW2 image: https://exploit.education/downloads `(AMD64 (also i486))`
 ### Host
 ```
-ssh user@192.168.0.78
-$ cd exploit-education-phoenix-arm64/
-$ ./boot-exploit-education-arm64.sh
+
 
 // Prep for GDB.  Phoenix is set to use gef instead of vanilla gdb. Use this command to silence ASCII related errors.
 
@@ -66,43 +63,25 @@ scp -r user@192.168.0.78:/opt/phoenix/arm ~/app_binaries
 scp ~/foobar.txt hostUser@192.168.0.37:~
 scp -r /opt/phoenix/arm hostUser@192.168.0.37:~/
 ```
-### Tips
-`Bridged mode` - Your guest machine gets an IP Address on the same subnet as your host. But if you have locked down wifi, you may not be given an IP address if it detects you are bridged.
-
+### Network Mode = NAT
+You can `SSH` into the Guest VM with `NAT` after setup a `Port Forwarding` rule:
 ```
-arp -a    // won't help identify your Guest I.P. address.
-ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}'    //   On the Guest
-VBoxManage guestproperty enumerate <name of VM>     // On the Host
-VBoxManage guestproperty get <name of VM> "/VirtualBox/GuestInfo/Net/0/V4/IP" // on the Host
-
-// SSH into the Guest VM with `NAT` after setup a `Port Forwarding` rule:
-
 ssh -p 1111 user@localhost
-
-Network -> Adapter 1(by default have attached to as NAT) -> Advanced -> Port Forwarding // add a new entry with the following settings
-
-Host Port: 1111, Guest Port: 22, leave the host IP and guest IP blank
-
-sudo lsof -iTCP -sTCP:LISTEN -n -P    // Check the `Port Forwarding` is setup correctly
-
-// Gparted Command Line:
-sudo parted
-print                                                            
-Model: ATA VBOX HARDDISK (scsi)
-Disk /dev/sda: 13.6GB
-Sector size (logical/physical): 512B/512B
-Partition Table: msdos
-Disk Flags:
-
-Number  Start   End     Size    Type     File system  Flags
- 1      1049kB  10.7GB  10.7GB  primary  ext4         boot
-
-resizepart                                                 
-
-Partition number? 1                                                       
-
-End?  [10.7GB]? 13000
 ```
+To set the Port Forwarding rule inside of VirtualBox:
+```
+Network -> Adapter 1(by default have attached to as NAT) -> Advanced -> Port Forwarding
+Host Port: 1111, Guest Port: 22, leave the host IP and guest IP blank
+```
+Then confirm it is working on the host machine:
+```
+sudo lsof -iTCP -sTCP:LISTEN -n -P    // Check 1111 `Port Forwarding` is running
+```
+I would NOT recommend running the Linux guest in `Bridged mode`.  Although our guest machine gets an IP Address on the same subnet as your host I hit roadblocks:
+
+  - If you have locked down wifi, you may not be given an IP address if it detects you are bridged.
+  - If you want to connect on a train (with no network access) NAT mode works.
+  - You have to find your IP address.  This should be trivially but it isn't, depending how the VM is setup.
 
 ### References
 ```

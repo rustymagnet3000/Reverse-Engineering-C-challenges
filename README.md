@@ -1,8 +1,11 @@
 # Explore vulnerable C APIs
 ## Overview
-A collection of notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  
+This repo is a collection of notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  You will read that I used two tools for these challenges:
 
-You had a choice of what binaries you wanted to test.  I used `ARM` binaries.
+- radare2 (disassembler)
+- gdb (debugger)
+
+As the writer of Exploit Education was kind, you had a choice of what platform you want to use I used `ARM (32 bit)` binaries.  These could run on the Linux due after you had downloaded an emulator.
 
 ### Reverse Engineering C challenges
 The Internet is full of excellent references to vulnerabilities in C.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).  Most of the APIs were relatively well known:
