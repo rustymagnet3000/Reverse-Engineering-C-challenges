@@ -5,7 +5,7 @@ This challenge started with a question:
 
 > As opposed to executing an existing function in the binary, this time we’ll be introducing the concept of “shell code”, and being able to execute our own code.
 
-You had to overwrite the return address and jump to self-written / downloaded `shellcode`.  Invoking your own `shellcode` was possible as the stack5 used `gets`.
+You had to overwrite the return address and jump to self-written / downloaded `shellcode`.  Invoking your own `shellcode` was possible as `stack5.c` used `gets`.
 
 ### Calculate buffer to overflow
 ```
