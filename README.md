@@ -5,7 +5,7 @@ This repo is a collection of notes I took to solve the challenges from https://e
 - radare2 (disassembler)
 - gdb (debugger)
 
-As the writer of Exploit Education was kind, you had a choice of what platform you want to use I used `ARM (32 bit)` binaries.  These could run on the Linux due after you had downloaded an emulator.
+I used `ARM (32 bit)` binaries, where I could.  To run the challenges on your normal machine ( which is probably `Intel x86_64`) you setup a `Virtual Machine` and an `ARM emulator`. Read `/setup/README.md` for more information.
 
 ### Reverse Engineering C challenges
 The Internet is full of excellent references to vulnerabilities in C.  In 2019, C-related vulnerabilities were still voted the number one issue in Software Security.  The [top 25 issues](https://cwe.mitre.org/).  Most of the APIs were relatively well known:
@@ -17,7 +17,7 @@ The Internet is full of excellent references to vulnerabilities in C.  In 2019, 
 - scanf
 - access
 
-You can use these insecure APIs to complete online `Memory Corruption` challenges.  Most offer a Virtual Machine so you play without worry.
+You can use these insecure APIs to complete online `Memory Corruption` challenges.  Most offer a `Virtual Machine` so you play without worry.
 ```
 https://exploit.education/
 https://ropemporium.com/
