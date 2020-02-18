@@ -19,6 +19,7 @@ The Internet is full of excellent references to vulnerabilities in C.  In 2019, 
 
 You can use these insecure APIs to complete online `Memory Corruption` challenges.  Most offer a `Virtual Machine` so you play without worry.
 ```
+https://crackmes.one/
 https://exploit.education/
 https://ropemporium.com/
 http://smashthestack.org/
@@ -36,6 +37,7 @@ https://blog.lamarranet.com/index.php/ ( exploit.education Phoenix and ROP Empor
 ```
 ### References
 ```
+https://www.coengoedegebure.com/buffer-overflow-attacks-explained/
 https://security.web.cern.ch/security/recommendations/en/codetools/c.shtml
 https://wiki2.org/en/Buffer_overflow_protection#Clang/LLVM
 https://cwe.mitre.org/data/definitions/120.html
