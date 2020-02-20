@@ -1,9 +1,10 @@
 # Explore vulnerable C APIs
 ## Overview
-This repo is a collection of notes I took to solve the challenges from https://exploit.education/phoenix/ using vulnerable C APIs.  You will read that I used two tools for these challenges:
+This repo is a collection of notes I took to solve `crackme` challenges using vulnerable C APIs or disassemblers.  I used three tools for these challenges:
 
 - radare2 (disassembler)
 - gdb (debugger)
+- Ghidra (tools developed by the NSA)
 
 I used `ARM (32 bit)` binaries, where I could.  To run the challenges on your normal machine ( which is probably `Intel x86_64`) you setup a `Virtual Machine` and an `ARM emulator`. Read `/setup/README.md` for more information.
 

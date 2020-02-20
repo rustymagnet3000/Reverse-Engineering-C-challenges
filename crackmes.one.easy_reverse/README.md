@@ -1,5 +1,10 @@
 ## https://crackmes.one/
-### Name: easy_reverse
+
+Name | easy_reverse 
+--|--
+Author  |  cbm-hackers
+Level  |  1
+
 #### Answer
 ```
 $ ./rev50 blah@blah1
@@ -46,8 +51,6 @@ undefined8 main(int param_1,undefined8 *param_2)
 Select `Edit Function Signature` by right-clicking on the Function Name in the `Decompile` window.
 
 ![rename_function](function-sig.png)
-
-
 
 Set the correct `method signature`.
 
