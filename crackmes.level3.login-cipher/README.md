@@ -64,95 +64,78 @@ There was no `main` function reference. But `__libc_start_main` was available.
 
 From that `signature` you could see the first pointer argument was to `main`.
 
-#### __isoc99_scanf
-There was no `scanf` signature.  Just a function pointer to `scanf`. I guessed this was related to using the `Global Offset Table.`
+#### Tidy-up Main
+You cannot over-state the value of `renaming variables` and `renaming functions`.  Of course, you get it wrong. As you slowly unpick the code, you refine.  I eventually landed here:
 
-added
-[0x00001090]> ? 0x7b1
-hex     0x7b1
-int32   1969
+![main_cleaned_up](/images/2020/02/main-cleaned-up.png)
 
-```
-let a = "Don't patch it!"
-print(a.count)
-"15\n"
-```
+#### Code the De-obfuscater
+I still had a bunch of `obfuscated strings`.  I had no `plaintext password`.  What next?  I wanted to de-obfuscate all Strings.  I had good psuedo-code from  Ghidra.
 
-#### Code stuff
 
-```
-char
-char *local_ptr_to_buffer;
-```
+![str_deobf](/images/2020/02/str-deobf.png)
+
+
+#### Re-code and run the function
+With a debugger, I finally understand what was happening.  
+
 ![debugger_view](/images/2020/02/debugger-view.png)
 
+The code was subtle.  I don't think I would have picked the subtlety without this step.
 
+```
+*ptr_buffer = a character in the mutable Buffer.
+ptr_buffer = the pointer to the character in the buffer. It was set to start at the first character in the buffer. Then it incremented on each loop.
+```
+#### The Obfuscation
+The following line  took the obfuscated character ( `*ptr_buffer` ) - that was pointed to by `ptr_buffer` - and subtracted a value.  Back to the `ASCII Table`.
 
-#### The Magic Line
-The `*` means it is adjusting the `buffer` and not the pointer.
 ```
 *ptr_buffer = *ptr_buffer + ((char)((int)growing_num / 10) * '\n' - (char)growing_num);
 ```
-
-
-
+Removing the casts:
+```
+*ptr_buffer = *ptr_buffer + ((seed / 10) * '\n' - seed);
+```
+#### Known-plaintext attack
+From Ghidra, and running the program, I knew that:
+```
+"Gtu.}'uj{fq!p{$"  == "Don't patch it!"
+```
+It was the `seed` value that create the apparent randomness. But it was a consistent pattern.  This was not random.  
 
 ```
-seed	13783
-seed	30945
-seed	20007
-seed	8977
-seed	62839
-seed	46657
-seed	64455
-seed	57969
-seed	12567
-seed	22433
-seed	25959
-seed	50641
-seed	26807
-seed	56577
-seed	2823
-Obfs str: Gtu.}'uj{fq!p{$
-buffer: Don't patch it!
+Obfuscated string: Gtu.}'uj{fq!p{$
+Seed:13783	Value to subtract :-3	Original:G	New:D
+Seed:30945	Value to subtract :-5	Original:t	New:o
+Seed:20007	Value to subtract :-7	Original:u	New:n
+Seed:8977	Value to subtract :-7	Original:.	New:'
+Seed:62839	Value to subtract :-9	Original:}	New:t
+Seed:46657	Value to subtract :-7	Original:'	New:
+Seed:64455	Value to subtract :-5	Original:u	New:p
+Seed:57969	Value to subtract :-9	Original:j	New:a
+Seed:12567	Value to subtract :-7	Original:{	New:t
+Seed:22433	Value to subtract :-3	Original:f	New:c
+Seed:25959	Value to subtract :-9	Original:q	New:h
+Seed:50641	Value to subtract :-1	Original:!	New:
+Seed:26807	Value to subtract :-7	Original:p	New:i
+Seed:56577	Value to subtract :-7	Original:{	New:t
+Seed:2823	Value to subtract :-3	Original:$	New:!
+Clean string: Don't patch it!
 ```
-#### Writing the De-Obfuscater function
+#### Answer
 ```
-char * string_deobfuscator(char *ptr_buffer){
-
-    uint seed = 0x7b1;
-    while (*ptr_buffer != '\0') {
-        seed = seed * 7 & 0xffff;
-        printf("Char being changed\tChar:%c\tDecimal:%d\n",*ptr_buffer, *ptr_buffer);
-        printf("Value added to char:\t%d\n\r",((seed / 10) * '\n' - seed));
-        *ptr_buffer = *ptr_buffer + ((seed / 10) * '\n' - seed);
-
-        // increment a char along in the buffer. This is how it moves a single char at a time..
-        ptr_buffer = ptr_buffer + 1;
-    }
-
-    return ptr_buffer;
-}
-
-int main (void) {
-    char buffer [264];
-    char *obfs_str = "Gtu.}\'uj{fq!p{$";             // = "Don't patch it!"
-    strcpy(buffer,obfs_str);
-    char *ptr_buffer = buffer;
-
-    string_deobfuscator(ptr_buffer);
-
-    printf("Obfs str: %s\n", obfs_str);
-    printf("buffer: %s\n", buffer);
-    return 0;
-}
+$ ./login-cipher
+Don't patch it!
+Insert your password: ccs-passwd44
+Correct!
 ```
 
 
-#### De-obfuscating Strings
+#### Final Code
+```
 const char* const obfs_strings[] = { "Gtu.}'uj{fq!p{$",
-                                    "Lszl{{%",
-                                    "vx{!whvt|twg?%",
+                                    "Lszl{{% vx{!whvt|twg?% ",
                                     "%64[^\n]",
                                     "fhz4yhx|~g=5",
                                     "Ftyynjy*",
@@ -164,7 +147,6 @@ char * string_deobfuscator(char *ptr_buffer){
     while (*ptr_buffer != '\0') {
         seed = seed * 7 & 0xffff;
         *ptr_buffer = *ptr_buffer + ((seed / 10) * '\n' - seed);
-        // increment a char along in the buffer. This is how it moves a single char at a time..
         ptr_buffer = ptr_buffer + 1;
     }
 
@@ -185,12 +167,4 @@ int main (void) {
 
     return 0;
 }
-```
-
-#### Answer
-```
-$ ./login-cipher
-Don't patch it!
-Insert your password: ccs-passwd44
-Correct!
 ```
