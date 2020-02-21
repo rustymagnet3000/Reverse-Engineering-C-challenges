@@ -1,6 +1,6 @@
 ## https://crackmes.one/
 
-Name | easy_reverse 
+Name | easy_reverse
 --|--
 Author  |  cbm-hackers
 Level  |  1

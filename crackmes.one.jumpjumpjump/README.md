@@ -60,9 +60,9 @@ counter = 585
 counter = 595
 ```
 #### Answer
-The character `c` got me there.  
+The character `c` was a tidy answer. But anything String, whose character values to `990` will work.
 
-I thought it should have been a string of 10 lowercase `d`.  ( `d = 100`, then `10 * 100`).  But I was thrown by `Line Return`. The decimal value of a Line Return was `10`.
+I originally thought it was a string of 10 lowercase `d's`.  ( `d = 100`, then `10 * 100`).  But I was thrown by `Line Return`. The decimal value of a Line Return was `10`. So the better answer was `c` ( `c = 99`, then `10 * 99 == 990.`. Then add your `10` for the `Line Return`).
 ```
 $ ./rev03
 enter the magic string
@@ -91,3 +91,5 @@ If you used the `Symbol Tree` to find all references to the global array, you co
 
 I concluded it was a `Static` variable.  Read this SO page for a great `static` explanation:
 > https://stackoverflow.com/questions/572547/what-does-static-mean-in-c
+
+I also concluded the return type was a `Char *`. Ghidra helped me with this. When I tried other types it was trying to `Cast` the return buffer.
