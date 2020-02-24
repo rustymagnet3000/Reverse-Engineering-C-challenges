@@ -77,7 +77,7 @@ I still had a bunch of `obfuscated strings`.  I had no `plaintext password`.  Wh
 
 
 #### Re-code and run the function
-With a debugger, I finally understand what was happening.  
+With a debugger, I finally understood:  
 
 ![debugger_view](/images/2020/02/debugger-view.png)
 
@@ -85,10 +85,11 @@ The code was subtle.  I don't think I would have picked the subtlety without thi
 
 ```
 *ptr_buffer = a character in the mutable Buffer.
-ptr_buffer = the pointer to the character in the buffer. It was set to start at the first character in the buffer. Then it incremented on each loop.
+ptr_buffer = the pointer to the character in the buffer. It was set to start at the first character in the buffer.
+The pointer incremented on each loop.
 ```
 #### The Obfuscation
-The following line  took the obfuscated character ( `*ptr_buffer` ) - that was pointed to by `ptr_buffer` - and subtracted a value.  Back to the `ASCII Table`.
+The following line took the obfuscated character in the Buffer ( `*ptr_buffer` ) and subtracted a value.  
 
 ```
 *ptr_buffer = *ptr_buffer + ((char)((int)growing_num / 10) * '\n' - (char)growing_num);
@@ -102,7 +103,7 @@ From Ghidra, and running the program, I knew that:
 ```
 "Gtu.}'uj{fq!p{$"  == "Don't patch it!"
 ```
-It was the `seed` value that create the apparent randomness. But it was a consistent pattern.  This was not random.  
+It was the `seed` value that create the apparent randomness. But it was a consistent pattern.  This was not random.  Back to the `ASCII Table`.
 
 ```
 Obfuscated string: Gtu.}'uj{fq!p{$
@@ -132,7 +133,7 @@ Correct!
 ```
 
 
-#### Final Code
+#### Code to Plaintext all Obfuscated Strings
 ```
 const char* const obfs_strings[] = { "Gtu.}'uj{fq!p{$",
                                     "Lszl{{% vx{!whvt|twg?% ",
