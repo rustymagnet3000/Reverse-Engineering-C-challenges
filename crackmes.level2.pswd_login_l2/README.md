@@ -15,6 +15,18 @@ pswd_login_l2
 aaa
 Login failed
 ```
+#### Registers
+I found, that I leaned on registers heavily in this crackme. As a reminder:
+```
+First Argument: RDI
+Second Argument: RSI
+Third Argument: RDX
+Fourth Argument: RCX
+Fifth Argument: R8
+Sixth Argument: R9
+Return Value: RAX
+```
+
 #### Symbols
 Lots of C++ Symbols. Much bigger than any of the challenges to date. Cut down list below:
 ```
@@ -51,11 +63,44 @@ rabin2 -qz pswd_login_l2
 0x3040 42 41 basic_string::_M_construct null not valid
 ```
 #### Getting past the CheckLength function
-Ghidra with some variable renaming looked like this:
+Ghidra - with some `variable renaming` - looked like this:
+
+![check_length_fn](/images/2020/02/check-length-fn.png)
+
+
+As you would expect, a debugger `Breakpoint` showed the First Register (`RDI`) was set to **5** when I entered `AAAAA`.
+
+But the Ghidra de-compile showed `casts` between `int` and `char`. This made the True/False check trickier to read.  `radare2` de-compiled without this. It was cleaner to read.  In short, Ghidra often de-compiled with:
+
 ```
-pswdBoolean = checkLength(enteredPassword,len);
+// Ghidra
+(char) $1 = '\x01'    TRUE
+(char) $0 = '\0'      FALSE
 ```
-A Breakpoint showed the First Register (`RDI`) was set to **5** when I entered "AAAAA".
+#### Getting past the CheckLength function. Rat hole?
+I noticed a function I didn't recognize. In real C++ code it was this API:
+```
+str0 = "C+_ String 0";
+str0.at(2) = '+';
+```
+Setting the breakpoint I wants to inspect the value passed into the function and the character being assigned to this position in the string.
+```
+gef➤  br at
+$rsi   : 0x1		-> setting a char in space 1
+
+gef➤  p $cs
+$7 = 0x33		-> 0x33 is the char '!'
+```
+I then tried a couple of guesses:
+```
+./pswd_login_l2
+A!AAAA
+Login failed
+
+./pswd_login_l2
+x!.1:.-8.4.p6-e.!-
+Login failed
+```
 
 Disassembled the `mangled function`:
 
@@ -67,18 +112,6 @@ More usefully, a breakpoint on a C++ String initialization failed to fire.
 ```
 call   0x5555555560b0 <_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEED1Ev@plt>
 ```
-
-#### Registers
-```
-First Argument: RDI
-Second Argument: RSI
-Third Argument: RDX
-Fourth Argument: RCX
-Fifth Argument: R8
-Sixth Argument: R9
-Return Value: RAX
-```
-
 #### C APIs
 ```
 // get Password input
