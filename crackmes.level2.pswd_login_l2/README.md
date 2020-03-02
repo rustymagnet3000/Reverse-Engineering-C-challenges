@@ -133,3 +133,20 @@ Starting program: /home/user/pswd_login_l2
 ABCDEFG
 ```
 Now I knew the password length was 7.
+
+#### Check Password
+Finding the Seed Value for XOR
+```
+0x55555555669a <password::checkPassword ..> 	xor    eax, edx
+
+b *0x000055555555669a
+
+// my entered Password(char)
+gef➤  p $edx
+$11 = 0x41
+
+// always a `B` character
+gef➤  p $eax
+$12 = 0x42
+
+```
