@@ -77,13 +77,13 @@ But the Ghidra de-compile showed `casts` between `int` and `char`. This made the
 (char) $1 = '\x01'    TRUE
 (char) $0 = '\0'      FALSE
 ```
-#### Getting past the CheckLength function. Rat hole?
+#### A C++ rat hole
 I noticed a function I didn't recognize. In real C++ code it was this API:
 ```
 str0 = "C+_ String 0";
 str0.at(2) = '+';
 ```
-Setting the breakpoint I wants to inspect the value passed into the function and the character being assigned to this position in the string.
+Setting the breakpoint I wanted to inspect the value passed into the function and the character being assigned to this position in the string.
 ```
 gef➤  br at
 $rsi   : 0x1		-> setting a char in space 1
@@ -101,28 +101,35 @@ Login failed
 x!.1:.-8.4.p6-e.!-
 Login failed
 ```
+#### Brute Force the Password
+Note to self -> when you don't understand all of the language `Symbols`, fall back on the `Registers`.  
 
-Disassembled the `mangled function`:
+I was going into rat holes looking at C++ APIs.  When all I needed was faith the `length` of the stored password was passed into a register.
 
-`disas _ZN8password11checkLengthEi`
+In Ghidra, I could not spot the length of the stored password.  
 
-The return value was `0x0`.
-
-More usefully, a breakpoint on a C++ String initialization failed to fire.
+I had a hunch the password was the hardcoded string:
 ```
-call   0x5555555560b0 <_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEED1Ev@plt>
-```
-#### C APIs
-```
-// get Password input
-getline(string buffer, max length);
-
-// convert String to Int
-atoi(String)
-
-// Set a command to fire at a certain time
-at(....)
-
+.-8.4.p6-e.!-_0010302a
 
 >>> len('x_.1:.-8.4.p6-e.!-')
 18
+```
+I considered writing a debugger script to brute-force guess the password length.
+
+Before that, I wanted to see if I could set a breakpoint on a function that did not fire, unless the length was correct.
+
+```
+b _ZN8password13checkPasswordENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+```
+De-mangled:
+```
+password::checkPassword(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+```
+That instantly got me a result:
+```
+gef➤  r
+Starting program: /home/user/pswd_login_l2
+ABCDEFG
+```
+Now I knew the password length was 7.
