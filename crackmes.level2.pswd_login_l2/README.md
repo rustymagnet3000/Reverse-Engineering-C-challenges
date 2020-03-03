@@ -11,36 +11,24 @@ No patching allowed, figure out the password, hopefully the difficulty is approp
 ```
 #### Run
 ```
-pswd_login_l2
+$ ./pswd_login_l2
 aaa
 Login failed
 ```
 #### Registers
-I found, that I leaned on registers heavily in this crackme. As a reminder:
+When you don't understand all of the language `Symbols`, you can fall back on the `CPU Registers`.  I leaned on registers heavily in this crackme:
 ```
+Return Value: RAX
 First Argument: RDI
 Second Argument: RSI
 Third Argument: RDX
 Fourth Argument: RCX
 Fifth Argument: R8
 Sixth Argument: R9
-Return Value: RAX
 ```
 
 #### Symbols
-Lots of C++ Symbols. Much bigger than any of the challenges to date. Cut down list below:
-```
-[0x00002280]> is~FUNC
-050 0x00002800 0x00002800   WEAK   FUNC   55 password::wrongPassword()
-054 0x00002570 0x00002570   WEAK   FUNC  171 password::checkLength(int)
-055 0x0000261c 0x0000261c   WEAK   FUNC  484 password::checkPassword(std::__cxx11::basic_string<char,std::char_traits<char>,std::allocator<char>>)
-062 0x00002870 0x00002870   WEAK   FUNC  110 password::password()
-070 0x00002365 0x00002365 GLOBAL   FUNC  305 main
-081 0x00002838 0x00002838   WEAK   FUNC   55 password::rightPassword()
-008 0x000020a0 0x000020a0 GLOBAL   FUNC   16 imp.memcmp
-012 0x00000000 0x00000000 GLOBAL   FUNC   16 imp.vsnprintf
-```
-#### Class of interest
+Lots of C++ Symbols. The Class of interest was `de-mangled` by Ghidra:
 
 ![Password_class](/images/2020/02/password-class.png)
 
@@ -102,11 +90,7 @@ x!.1:.-8.4.p6-e.!-
 Login failed
 ```
 #### Brute Force the Password
-Note to self -> when you don't understand all of the language `Symbols`, fall back on the `Registers`.  
-
-I was going into rat holes looking at C++ APIs.  When all I needed was faith the `length` of the stored password was passed into a register.
-
-In Ghidra, I could not spot the length of the stored password.  
+I was going into rat holes looking at C++ APIs.  When all I needed was faith the `length` of the stored password was passed in `register`.  In Ghidra, I could not spot the length of the stored password.  
 
 I had a hunch the password was the hardcoded string:
 ```
@@ -115,29 +99,26 @@ I had a hunch the password was the hardcoded string:
 >>> len('x_.1:.-8.4.p6-e.!-')
 18
 ```
-I considered writing a debugger script to brute-force guess the password length.
+I considered writing a debugger script to brute-force guess the password length.  But there was a simpler solution; set a `breakpoint` on a function that would not trigger unless the length was correct.
 
-Before that, I wanted to see if I could set a breakpoint on a function that did not fire, unless the length was correct.
-
-```
-b _ZN8password13checkPasswordENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
-```
-De-mangled:
+Breakpoint was set on this de-mangled function:
 ```
 password::checkPassword(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
 ```
-That instantly got me a result:
+That instantly got me a breakpoint hit:
 ```
 gef➤  r
 Starting program: /home/user/pswd_login_l2
 ABCDEFG
 ```
-Now I knew the password length was 7.
+Now I knew the password length was **7**.
 
-#### Check Password
-Finding the Seed Value for XOR
+#### Check Password - understanding the XOR
+Inside this function, I could see `XOR` instructions.
+
+I wanted to find the Seed Value that was being `XOR'd` with my entered password.
 ```
-0x55555555669a <password::checkPassword ..> 	xor    eax, edx
+0x55555555669a <..checkPassword ..> xor eax, edx
 
 b *0x000055555555669a
 
@@ -148,5 +129,32 @@ $11 = 0x41
 // always a `B` character
 gef➤  p $eax
 $12 = 0x42
+```
+Now we know the XOR is always `'B'`.
+#### Check Password - XOR hardcoded Strings
+Inside `Script Manager` in `Ghidra` there are lots of helpful scripts. Filter on `xor`.
 
+![script_manager_ghidra](/images/2020/03/script-manager-ghidra.png)
+
+Then just set the Key to:
+`42`
+
+Although it is not relevant here [ as we have only a single hex byte ], the XOR Key Value needs to be written in the correct `Endian` order.
+
+That auto-translated `'x_.1:.-8.4.p6-e.!-'` with the XOR value.  I didn't have to specify the memory address.
+
+![auto_xord_string](/images/2020/03/auto-xord-string.png)
+
+This gets you the string:
+```
+:lsxlozlvl2to'lco
+```
+#### Answer
+The password is 7 characters of `:lsxlozlvl2to'lcoB`.  Which ones?
+
+
+```
+$ ./pswd_login_l2
+lozlvl2
+Login successful
 ```
