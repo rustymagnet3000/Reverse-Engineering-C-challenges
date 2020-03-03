@@ -36,7 +36,7 @@ Lots of C++ Symbols. The Class of interest was `de-mangled` by Ghidra:
 ```
 rabin2 -I pswd_login_l2
 arch     x86
-canary   false
+endian   little
 class    ELF64
 lang     c
 os       linux
@@ -132,26 +132,59 @@ $12 = 0x42
 ```
 Now we know the XOR is always `'B'`.
 #### Check Password - XOR hardcoded Strings
-Inside `Script Manager` in `Ghidra` there are lots of helpful scripts. Filter on `xor`.
+Inside `Script Manager` in `Ghidra` filter on `xor`.
 
 ![script_manager_ghidra](/images/2020/03/script-manager-ghidra.png)
 
-Then just set the Key to:
-`42`
+Then just set the Key to `42`.
 
-Although it is not relevant here [ as we have only a single hex byte ], the XOR Key Value needs to be written in the correct `Endian` order.
+Although it was not relevant here [ as I only had a single hex byte ] the XOR Key Value needed to be written in the correct `Endian` order.
 
-That auto-translated `'x_.1:.-8.4.p6-e.!-'` with the XOR value.  I didn't have to specify the memory address.
+Setting that script, it auto-translated `'x_.1:.-8.4.p6-e.!-'` with the XOR value.  I didn't have to specify the memory address.
 
 ![auto_xord_string](/images/2020/03/auto-xord-string.png)
 
-This gets you the string:
+#### Check Password - narrowing in
+The password is 7 characters of `:lsxlozlvl2to'lcoB`.  Which characters?  
+
+![loop_in_ghidra](/images/2020/03/loop-in-ghidra.png)
+
+Putting a breakpoint on `offset x2677` gave me the Loop index. If you continued, the `$eax` register was incrementing by one. This piece of code was a loop that `XOR'd` each character in my 7 character string.
+
+That gave me a clue.  Look at the code after the loop.  At some point there would be a compare of strings in the `Registers`.  The listing View in Ghidra gave me the clue:
 ```
-:lsxlozlvl2to'lco
+0010279e e8 ec 02        CALL       std::operator==<char>
+```
+
+A breakpoint triggered. Printing the **second function argument**:
+
+```
+$rsi   : 0x00007fffffffe310  →  0x00007fffffffe320  →  0x00702e342e382d2e (".-8.4.p"?)
+```
+This was the `Password` object. The first 16 bytes were the reference to `self` (`x310`).
+
+```
+gef➤  p/u 0x7fffffffe320 - 0x7fffffffe310
+16
+```
+For a more useful example of the **first function argument** being compared to the **second function argument**:
+
+```
+r
+Starting program:
+lllllll
+```
+When the breakpoint triggers on the `operator==<char>` you can see:
+```
+First Argument: RDI
+$rdi   : 0x00007fffffffe330  →  0x00007fffffffe340  →  0x002e2e2e2e2e2e2e (".......")
+Second Argument: RSI
+$rsi   : 0x00007fffffffe310  →  0x00007fffffffe320  →  0x00702e342e382d2e (".-8.4.p")
 ```
 #### Answer
-The password is 7 characters of `:lsxlozlvl2to'lcoB`.  Which ones?
+You can see with `gdb`, the call `operator==<char>` is  comparing 7-characters from the hardcoded string to the XOR result of the user entered input.
 
+The `Password` object was on the `Heap`.  Searching for `Heap memory references` in Ghidra was useless.  Hence, sometimes you need to rely on multiple tools to solve a crackme.
 
 ```
 $ ./pswd_login_l2
