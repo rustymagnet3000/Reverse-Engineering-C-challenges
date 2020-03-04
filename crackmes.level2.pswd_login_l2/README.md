@@ -89,7 +89,7 @@ Login failed
 x!.1:.-8.4.p6-e.!-
 Login failed
 ```
-#### Brute Force the Password
+#### Brute Force the Check Length function
 I was going into rat holes looking at C++ APIs.  When all I needed was faith the `length` of the stored password was passed in `register`.  In Ghidra, I could not spot the length of the stored password.  
 
 I had a hunch the password was the hardcoded string:
