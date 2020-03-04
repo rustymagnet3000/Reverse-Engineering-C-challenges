@@ -41,11 +41,25 @@ imp.__isoc99_scanf
 #### Main
 ![main_cleaned_up_math0x0](/images/2020/03/main-cleaned-up-math0x0.png)
 
-#### Main
+#### No obvious Compare instruction
 In Ghidra you could select `Search \ Program Text`. Then you could search for a `CMP` instruction to see if something obvious was being done.
 
 
 ![search_mnemonic](/images/2020/03/search-mnemonic.png)
+
+#### scanf
+Was this a `Buffer Overflow` challenge?  
+
+![scanf_buffer_math0x0](/images/2020/03/scanf-buffer-math0x0.png)
+
+Looks like it:
+```
+run <<< $(python3 -c 'print ("\x41" * 50)')
+[#0] Id 1, stopped, reason: SIGSEGV
+─────────────────
+0x41414141 in ?? ()
+```
+I get a `Segmentation Fault` in the `Instructions Pointer ($eip)`.`
 #### Debugger
 After you enter a password is gets entered into the `Stack Pointer`.
 ```
