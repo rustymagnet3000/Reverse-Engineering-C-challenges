@@ -24,7 +24,7 @@ stripped false
 #### Strings
 ![strings_math0x0](/images/2020/03/strings-math0x0.png)
 #### Symbols
-It looked like the author purposely tried to hide the meaning of the function names.  The binary was not stripped of debug Symbols.
+It looked like the author purposely tried to hide meaning of the function names.  The binary was not stripped of debug Symbols.
 ```
 rabin2 -s math0x0
 [Symbols]
@@ -92,12 +92,31 @@ gef➤  x/24x $esp
 gef➤  p/u 0xffffd59c - 0xffffd570
 $1 = 44
 ```
-We have the offset.  We need to fill the Buffer with **44** characters and then write the address `0x8049182 <__s_func>` in `Little Endian` format.
+We have the offset.  We need to fill the Buffer with **44** characters and then write the address `08049182 <__s_func>` in `Little Endian` format.
 
 That should be: `"\x82\x91\x04\x08"`.
 
 #### Execute Payload
 ```
-run <<< $(python3 -c 'print ("\x41" * 44) + "\x82\x91\x04\x08"')
+run <<< $(python3 -c 'print ("\x41" * 44 + "\x82\x91\x04\x08")')
 ```
-This failed.  I got a `SegFault`. Something was being truncated.
+Failed.  I got a `SegFault`. Something was truncated. The answer to why was [here][ba369178].  `Python3` was printing `c2` after each non-printable ASCII character.
+
+  [ba369178]: https://stackoverflow.com/questions/42884251/why-is-the-output-of-print-in-python2-and-python3-different-with-the-same-string "python_2_and_3_byte_differences"
+
+```
+python3 -c 'import sys;payload="\x41" * 44;payload += "\x08\x04\x91\x82"[::-1];sys.stdout.write(payload);'| hexdump -C
+00000000  41 41 41 41 41 41 41 41  41 41 41 41 41 41 41 41  |AAAAAAAAAAAAAAAA|
+*
+00000020  41 41 41 41 41 41 41 41  41 41 41 41 c2 82 c2 91  |AAAAAAAAAAAA....|
+00000030  04 08                                             |..|
+00000032
+```
+
+
+#### Answer
+Changed to `Python 2.7` and it worked:
+```
+run <<< $(python -c 'print "\x41" * 44 + "\x82\x91\x04\x08"')
+enter the password:Great !!
+```
