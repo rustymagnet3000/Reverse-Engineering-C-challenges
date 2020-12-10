@@ -12,7 +12,7 @@ Don't run these challenges on your normal computer.  Either setup a throwaway `V
 
 Give some thought to the instruction set you want to understand.  I used `ARM (32 bit)` binaries, where I could.
 
-### Reverse Engineering C challenges
+### Finding Reverse Engineering C challenges
 The Internet is full of excellent references to vulnerabilities in C.  In 2020, C-related vulnerabilities were most of the [top 25 issues](https://cwe.mitre.org/).  Most of the vulnerable APIs are well known:
 
 - `gets`
