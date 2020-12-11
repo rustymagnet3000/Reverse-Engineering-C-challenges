@@ -49,6 +49,19 @@ https://cwe.mitre.org/data/definitions/120.html
 https://stackoverflow.com/questions/35659152/stack-based-buffer-overflow-challenge-in-c-using-scanf-with-limited-input
 ```
 
+## Docker - setup a challenge machine 4 commands
+On MacOS, with `Docker Desktop` installed you could easily find a pre-canned machine. Easy to setup and run. Already have reversing tools pre-installed.
+##### Find image you like
+https://hub.docker.com/r/duckll/ctf-box/
+##### pull docker image
+`docker pull duckll/ctf-box`
+#####
+`docker run -idt --name ctf duckll/ctf-box`
+##### Start the container
+`docker start ctf`
+##### Start the container with a bash terminal ( cut and paste allowed )
+`docker container exec -it ctf bash`
+
 
 ## Setup a Virtual Machine for challenges ( with ARM instructions, on MacOS )
 - [x] Get VirtualBox: https://www.virtualbox.org/wiki/Downloads
