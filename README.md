@@ -20,9 +20,13 @@ The Internet is full of excellent references to vulnerabilities in C.  In 2020, 
 - `printf`
 - `sprintf`
 - `scanf`
-- `access`
 
-You can use these insecure APIs to complete online `Memory Corruption` challenges.  Most offer a `Virtual Machine` so you play without worry.
+You  use these insecure APIs to trigger a  `Buffer Overflow ` or `Format String Vulnerability`.
+
+A great background paper on these types of vulnerabilities can be found at [Stanford](https://crypto.stanford.edu/cs155old/cs155-spring08/papers/formatstring-1.2.pdf):
+
+
+Most offer a `Virtual Machine` so you play without worry.
 ```
 https://crackmes.one/
 https://exploit.education/
