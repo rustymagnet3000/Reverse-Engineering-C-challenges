@@ -1,31 +1,29 @@
-# Explore vulnerable C APIs
+# Exploring vulnerable C APIs
 ## Overview
-This repo is a collection of notes from `crackme` challenges using vulnerable C APIs or disassemblers.  
+This repo is a collection of notes from `crackme` challenges.
 
-I used three tools for these challenges:
+I used three tools:
 
-- radare2 (disassembler)
-- gdb (debugger)
-- Ghidra (tools developed by the NSA)
+- a debugger ( `gdb` with the `gef` extension )
+- a command line disassembler ( `radare2` )
+- A visual disassembler ( `Ghidra` )
 
-Don't run these challenges on your normal computer.  Either setup a throwaway `Virtual Machine` or `Docker Image`.  Instructions below.
+Don't run these challenges on your normal computer.  Either setup a throwaway `Virtual Machine` or, better still, a `Docker Image`.
 
-Give some thought to the instruction set you want to understand.  I used `ARM (32 bit)` binaries, where I could.
+### Exploitable APIs
+The Internet is full of excellent references to vulnerabilities that can be exploited with `C functions`.  In 2020, C-related vulnerabilities were most of the [top 25 issues](https://cwe.mitre.org/).  Most of the  APIs are well known:
+
+- `gets`      -> get user input
+- `strcpy`    -> copy a string
+- `printf`    -> print formatted strings
+- `sprintf`   -> Composes a string with the same text that would be printed
+- `scanf`     -> gets user input and then composes a string with the given format
+
+You use these APIs to trigger a `Buffer Overflow ` or `Format String Vulnerability`.  A great background paper on these types of vulnerabilities can be found at [Stanford](https://crypto.stanford.edu/cs155old/cs155-spring08/papers/formatstring-1.2.pdf):
+
+`Code scanning tools` or `Development Environments` would alert on an insecure function being used.  Or - like on `macOS` - the compiler / linker would switch the function for a stricter alternative.  But the `crackme` challenges typical ensured all safety controls were off.
 
 ### Finding Reverse Engineering C challenges
-The Internet is full of excellent references to vulnerabilities in C.  In 2020, C-related vulnerabilities were most of the [top 25 issues](https://cwe.mitre.org/).  Most of the vulnerable APIs are well known:
-
-- `gets`
-- `strcpy`
-- `printf`
-- `sprintf`
-- `scanf`
-
-You  use these insecure APIs to trigger a  `Buffer Overflow ` or `Format String Vulnerability`.
-
-A great background paper on these types of vulnerabilities can be found at [Stanford](https://crypto.stanford.edu/cs155old/cs155-spring08/papers/formatstring-1.2.pdf):
-
-
 Most offer a `Virtual Machine` so you play without worry.
 ```
 https://crackmes.one/
