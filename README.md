@@ -57,12 +57,31 @@ On MacOS, with `Docker Desktop` installed you could easily find a pre-canned mac
 https://hub.docker.com/r/duckll/ctf-box/
 ##### pull docker image
 `docker pull duckll/ctf-box`
-#####
+##### Run
 `docker run -idt --name ctf duckll/ctf-box`
 ##### Start the container
 `docker start ctf`
 ##### Start the container with a bash terminal ( cut and paste allowed )
 `docker container exec -it ctf bash`
+### Extend Container with a 32-bit compiler
+##### Update container
+`apt-get update`
+##### Install multi-architecture compiler
+`apt install gcc-4.8-multilib`
+##### Compile for 32 bit machine
+`gcc-4.8 -m32 -o format-two-32b format_two.c`
+##### Check file format
+`file format-two-32b`     # format-two-32b: ELF 32-bit LSB executable
+### Extend Container to compile ARM code
+##### Install cross-compiler
+`apt-get install gcc-arm-linux-gnueabi`
+##### Extras
+`apt-get install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi libncurses5-dev`
+##### Required, generic header files
+`sudo apt-get install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf`
+##### Compile for arm
+`arm-linux-gnueabi-gcc -o arm_f2 format_two.c`
+
 
 
 ## Setup a Virtual Machine for challenges ( with ARM instructions, on MacOS )
