@@ -19,9 +19,9 @@ The Internet is full of excellent references to vulnerabilities that can be expl
 - `sprintf`   -> Composes a string with the same text that would be printed
 - `scanf`     -> gets user input and then composes a string with the given format
 
-You use these APIs to trigger a `Buffer Overflow ` or `Format String Vulnerability`.  A great background paper on these types of vulnerabilities can be found at [Stanford](https://crypto.stanford.edu/cs155old/cs155-spring08/papers/formatstring-1.2.pdf):
+You use these APIs to trigger a `Buffer Overflow ` or `Format String Vulnerability`.  A great background paper on these types of vulnerabilities can be found at [Stanford](https://crypto.stanford.edu/cs155old/cs155-spring08/papers/formatstring-1.2.pdf).
 
-`Code scanning tools` or `Development Environments` would alert on an insecure function being used.  Or - like on `macOS` - the compiler / linker would switch the function for a stricter alternative.  But the `crackme` challenges typical ensured all safety controls were off.
+`Code scanning tools` and `default Compiler Settings` would alert on these insecure function or incorrect usage.  Or - like on `macOS` - the compiler / linker would switch the function for a stricter alternative.  But the `crackme` challenges ensured all safety controls were off.
 
 ### Finding Reverse Engineering C challenges
 Most offer a `Virtual Machine` so you play without worry.
